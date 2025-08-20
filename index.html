@@ -256,7 +256,7 @@
       passwordMessage.className = `mt-3 text-sm min-h-[1.5em] ${esError ? 'text-red-300' : 'text-green-300'}`;
     }
 
-    // Generar código QR
+    // Generar código QR básico
     function generarQR() {
       try {
         // Crear un canvas temporal
@@ -267,19 +267,43 @@
         canvas.width = 100;
         canvas.height = 100;
         
-        // Dibujar un QR básico (en una implementación real, usarías una librería QR)
-        ctx.fillStyle = '#0A6B4E';
+        // Dibujar un QR básico (patrón de ejemplo)
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, 100, 100);
+        
+        ctx.fillStyle = '#0A6B4E';
+        // Esquinas principales
+        ctx.fillRect(0, 0, 30, 30);
+        ctx.fillRect(70, 0, 30, 30);
+        ctx.fillRect(0, 70, 30, 30);
+        
+        // Patrones internos
         ctx.fillStyle = '#56C09B';
-        ctx.fillRect(20, 20, 20, 20);
-        ctx.fillRect(60, 20, 20, 20);
-        ctx.fillRect(20, 60, 20, 20);
+        ctx.fillRect(10, 10, 10, 10);
+        ctx.fillRect(80, 10, 10, 10);
+        ctx.fillRect(10, 80, 10, 10);
+        
+        // Puntos centrales
+        ctx.fillStyle = '#0A6B4E';
+        ctx.fillRect(40, 40, 20, 20);
+        ctx.fillRect(60, 20, 10, 10);
+        ctx.fillRect(20, 60, 10, 10);
         
         // Asignar la imagen al elemento
         qrImage.src = canvas.toDataURL('image/png');
         qrContainer.classList.remove('hidden');
       } catch (error) {
         console.error('Error al generar QR:', error);
+        // En caso de error, mostrar un mensaje alternativo
+        qrContainer.innerHTML = `
+          <div class="text-center">
+            <div class="mx-auto w-24 h-24 bg-gray-200 border-2 border-dashed rounded-xl flex items-center justify-center">
+              <span class="text-gray-500 text-xs">QR</span>
+            </div>
+            <p class="text-white/80 text-sm mt-2">Escanee para verificar la autenticidad del certificado</p>
+          </div>
+        `;
+        qrContainer.classList.remove('hidden');
       }
     }
 
@@ -360,11 +384,18 @@
       // Generar código QR antes de imprimir
       generarQR();
       
+      // Forzar orientación horizontal
+      const style = document.createElement('style');
+      style.innerHTML = '@page { size: letter landscape; }';
+      document.head.appendChild(style);
+      
       // Imprimir
       window.print();
       
-      // Ocultar QR después de imprimir (opcional)
+      // Remover estilo después de imprimir
       setTimeout(() => {
+        document.head.removeChild(style);
+        // Ocultar QR después de imprimir
         qrContainer.classList.add('hidden');
       }, 1000);
     });
