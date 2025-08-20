@@ -6,21 +6,26 @@
   <title>Certificado Interactivo - Taller IA en EMS</title>
   <!-- Tailwind via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- html2canvas for capturing HTML as image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     @media print {
       #controlBar, #notaDemo, #passwordSection { display: none !important; }
       body { background: white !important; }
       #certContainer { box-shadow: none !important; }
-      /* Configuración para impresión horizontal en carta */
+      /* Configuración para impresión en A4 */
       @page {
-        size: letter landscape;
+        size: A4;
         margin: 1cm;
       }
       /* Ajuste del tamaño del certificado para que quepa */
       #certContainer {
-        max-width: 95%;
+        max-width: 100%;
         margin: 0 auto;
-        transform: scale(0.9);
+        transform: scale(0.85);
+        transform-origin: top center;
       }
     }
 
@@ -87,8 +92,8 @@
         <button id="btnVista" class="px-4 py-2 rounded-lg bg-[#56C09B] hover:bg-[#37BB7D] text-[#0A6B4E] font-semibold shadow opacity-50 cursor-not-allowed">
           Vista previa
         </button>
-        <button id="btnImprimir" class="px-4 py-2 rounded-lg bg-[#37BB7D] hover:bg-[#0A6B4E] hover:text-white text-slate-900 font-semibold shadow opacity-50 cursor-not-allowed">
-          Imprimir
+        <button id="btnDescargar" class="px-4 py-2 rounded-lg bg-[#37BB7D] hover:bg-[#0A6B4E] hover:text-white text-slate-900 font-semibold shadow opacity-50 cursor-not-allowed">
+          Descargar PDF
         </button>
       </div>
     </div>
@@ -97,7 +102,7 @@
   <!-- Contenido principal -->
   <main class="max-w-5xl mx-auto px-4 py-10">
     <p id="notaDemo" class="mb-6 text-white/70 text-sm">
-      Consejo: escribe el nombre, elige si es profesor o profesora y presiona “Vista previa”. Luego imprime tu certificado.
+      Consejo: escribe el nombre, elige si es profesor o profesora y presiona “Vista previa”. Luego descarga tu certificado en PDF.
     </p>
 
     <!-- Sección de contraseña -->
@@ -190,7 +195,7 @@
             <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
               <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold" style="background-color:#0A6B4E">✓</span>
               <p class="text-white/85 text-sm leading-relaxed">
-                Este certificado es válido para acreditar la participación en el taller. Para impresión, usa el botón “Imprimir”.
+                Este certificado es válido para acreditar la participación en el taller.
               </p>
             </div>
           </div>
@@ -213,7 +218,7 @@
     const nombreMostrado = $('#nombreMostrado');
     const fechaAuto = $('#fechaAuto');
     const btnVista = $('#btnVista');
-    const btnImprimir = $('#btnImprimir');
+    const btnDescargar = $('#btnDescargar');
     const passwordInput = $('#passwordInput');
     const btnValidar = $('#btnValidar');
     const passwordMessage = $('#passwordMessage');
@@ -260,9 +265,9 @@
         // Habilitar campos y botones
         nombreInput.disabled = false;
         btnVista.classList.remove('opacity-50', 'cursor-not-allowed');
-        btnImprimir.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnDescargar.classList.remove('opacity-50', 'cursor-not-allowed');
         btnVista.disabled = false;
-        btnImprimir.disabled = false;
+        btnDescargar.disabled = false;
         
         // Mostrar el certificado
         certContainer.classList.remove('hidden');
@@ -280,13 +285,69 @@
         // Mantener deshabilitados
         nombreInput.disabled = true;
         btnVista.classList.add('opacity-50', 'cursor-not-allowed');
-        btnImprimir.classList.add('opacity-50', 'cursor-not-allowed');
+        btnDescargar.classList.add('opacity-50', 'cursor-not-allowed');
         btnVista.disabled = true;
-        btnImprimir.disabled = true;
+        btnDescargar.disabled = true;
         
         setTimeout(() => {
           passwordMessage.textContent = '';
         }, 3000);
+      }
+    }
+
+    // Generar PDF
+    async function generarPDF() {
+      if (!accesoValidado) {
+        mostrarMensaje('Debe ingresar la contraseña de docente para descargar el certificado.');
+        passwordInput.focus();
+        return;
+      }
+
+      try {
+        // Usar jsPDF y html2canvas para generar el PDF
+        const { jsPDF } = window.jspdf;
+        
+        // Capturar el certificado como imagen
+        const canvas = await html2canvas(certContainer, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#0A6B4E'
+        });
+        
+        // Crear PDF
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        // Calcular dimensiones para centrar la imagen
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        // Agregar imagen al PDF
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        // Si la imagen es más alta que una página, agregar más páginas
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        // Descargar el PDF
+        const nombre = (nombreInput.value || 'participante').trim().replace(/\s+/g, '_');
+        pdf.save(`certificado_${nombre}.pdf`);
+        
+      } catch (error) {
+        console.error('Error al generar el PDF:', error);
+        mostrarMensaje('Error al generar el PDF. Intente nuevamente.');
       }
     }
 
@@ -316,26 +377,7 @@
       if (!nombreInput.value.trim()) nombreInput.focus();
     });
 
-    btnImprimir.addEventListener('click', () => {
-      if (!accesoValidado) {
-        mostrarMensaje('Debe ingresar la contraseña de docente para imprimir certificados.');
-        passwordInput.focus();
-        return;
-      }
-      
-      // Forzar orientación horizontal
-      const style = document.createElement('style');
-      style.innerHTML = '@page { size: letter landscape; }';
-      document.head.appendChild(style);
-      
-      // Imprimir
-      window.print();
-      
-      // Remover estilo después de imprimir
-      setTimeout(() => {
-        document.head.removeChild(style);
-      }, 1000);
-    });
+    btnDescargar.addEventListener('click', generarPDF);
 
     btnValidar.addEventListener('click', validarPassword);
 
@@ -349,7 +391,7 @@
     // Inicialmente deshabilitar todo
     nombreInput.disabled = true;
     btnVista.disabled = true;
-    btnImprimir.disabled = true;
+    btnDescargar.disabled = true;
     certContainer.classList.add('hidden');
   </script>
 </body>
