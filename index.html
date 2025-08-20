@@ -15,9 +15,9 @@
       #controlBar, #notaDemo, #passwordSection { display: none !important; }
       body { background: white !important; }
       #certContainer { box-shadow: none !important; }
-      /* Configuración para impresión en A4 */
+      /* Configuración para impresión en landscape A4 */
       @page {
-        size: A4;
+        size: A4 landscape;
         margin: 1cm;
       }
       /* Ajuste del tamaño del certificado para que quepa */
@@ -314,32 +314,25 @@
           backgroundColor: '#0A6B4E'
         });
         
-        // Crear PDF
+        // Crear PDF en orientación landscape
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
-          orientation: 'portrait',
+          orientation: 'landscape',
           unit: 'mm',
           format: 'a4'
         });
         
         // Calcular dimensiones para centrar la imagen
-        const imgWidth = 210; // A4 width in mm
-        const pageHeight = 297; // A4 height in mm
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
+        const imgWidth = 297; // A4 landscape width in mm
+        const imgHeight = 210; // A4 landscape height in mm
+        const ratio = Math.min(imgWidth / canvas.width, imgHeight / canvas.height);
+        const pdfWidth = canvas.width * ratio;
+        const pdfHeight = canvas.height * ratio;
+        const x = (imgWidth - pdfWidth) / 2;
+        const y = (imgHeight - pdfHeight) / 2;
         
         // Agregar imagen al PDF
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        
-        // Si la imagen es más alta que una página, agregar más páginas
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
+        pdf.addImage(imgData, 'PNG', x, y, pdfWidth, pdfHeight);
         
         // Descargar el PDF
         const nombre = (nombreInput.value || 'participante').trim().replace(/\s+/g, '_');
