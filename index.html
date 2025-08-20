@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,11 +7,18 @@
   <title>Certificado Interactivo - Taller IA en EMS</title>
   <!-- Tailwind via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QR Code Generator -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/build/qrcode.min.js"></script>
   <style>
     @media print {
       #controlBar, #notaDemo, #notaNoOficial, #passwordSection { display: none !important; }
       body { background: white !important; }
       #certContainer { box-shadow: none !important; }
+      /* Configuración para impresión horizontal en carta */
+      @page {
+        size: letter landscape;
+        margin: 2cm;
+      }
     }
 
     /* Fondo con sutil textura usando los colores institucionales (verdes CONALEP) */
@@ -311,7 +319,29 @@
         passwordInput.focus();
         return;
       }
+      
+      // Generar código QR
+      const qrCode = new QRCode(document.createElement('canvas'), {
+        width: 100,
+        height: 100,
+        text: "Certificado expedido oficialmente por CONALEP III - Culiacán, Sinaloa"
+      });
+      
+      // Insertar QR en el certificado
+      const certFooter = document.querySelector('#certContainer footer');
+      const qrDiv = document.createElement('div');
+      qrDiv.innerHTML = `<div class="text-center mt-4"><img src="${qrCode.makeImage().toDataURL()}" alt="QR para verificación" class="mx-auto" style="width: 100px; height: 100px;"></div>`;
+      certFooter.appendChild(qrDiv);
+      
+      // Imprimir
       window.print();
+      
+      // Remover QR después de imprimir
+      setTimeout(() => {
+        if (qrDiv.parentNode) {
+          qrDiv.parentNode.removeChild(qrDiv);
+        }
+      }, 1000);
     });
 
     btnValidar.addEventListener('click', validarPassword);
@@ -331,3 +361,4 @@
   </script>
 </body>
 </html>
+```
