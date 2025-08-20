@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Certificado Interactivo - Taller IA en EMS</title>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      #controlBar, #notaDemo, #notaNoOficial, #passwordSection { display: none !important; }
+      body { background: white !important; }
+      #certContainer { box-shadow: none !important; }
+    }
+
+    /* Fondo con sutil textura usando los colores institucionales (verdes CONALEP) */
+    .bg-gradient {
+      background-image:
+        radial-gradient(1200px 600px at 80% -20%, rgba(37,145,96,0.35), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(56,185,125,0.20), transparent 70%),
+        linear-gradient(140deg, #0A6B4E 0%, #0A6B4E 40%, #0A6B4E 100%);
+    }
+
+    /* Marco decorativo del certificado con paleta verde CONALEP */
+    .frame {
+      background:
+        linear-gradient(#0A6B4E, #0A6B4E) padding-box,
+        conic-gradient(
+          from 180deg at 50% 50%,
+          #0A6B4E,
+          #37BB7D,
+          #56C09B,
+          #0A6B4E
+        ) border-box;
+      border: 8px solid transparent;
+      border-radius: 20px;
+    }
+
+    /* Sello animado con paleta verde CONALEP */
+    .stamp {
+      background:
+        radial-gradient(circle at 30% 30%, rgba(56,185,125,.45), transparent 45%),
+        conic-gradient(from 0deg, #0A6B4E, #37BB7D, #56C09B, #0A6B4E);
+      filter: saturate(115%) contrast(110%);
+      animation: slow-rotate 24s linear infinite;
+    }
+    @keyframes slow-rotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .title-font {
+      font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      letter-spacing: .02em;
+    }
+    .body-font {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient text-white body-font antialiased selection:bg-[#56C09B]/60 selection:text-[#0A6B4E]">
+  <!-- Barra de control -->
+  <section id="controlBar" class="sticky top-0 z-50 backdrop-blur bg-[#0A6B4E]/85 border-b border-white/10">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full grid place-items-center text-[#0A6B4E] font-extrabold bg-[#56C09B]">IA</div>
+        <div>
+          <p class="text-sm text-white/90">Certificado Interactivo</p>
+          <p class="text-xs text-white/80">Taller: Uso de IAs en Educación Media Superior</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <input id="nombreInput" type="text" placeholder="Escribe el nombre completo..."
+               class="px-4 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#37BB7D] w-64 md:w-80"
+               maxlength="80" />
+        <button id="btnVista" class="px-4 py-2 rounded-lg bg-[#56C09B] hover:bg-[#37BB7D] text-[#0A6B4E] font-semibold shadow">
+          Vista previa
+        </button>
+        <button id="btnImprimir" class="px-4 py-2 rounded-lg bg-[#37BB7D] hover:bg-[#0A6B4E] hover:text-white text-slate-900 font-semibold shadow">
+          Imprimir
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenedor principal -->
+  <main class="max-w-5xl mx-auto px-4 py-10">
+    <p id="notaDemo" class="mb-6 text-white/70 text-sm">
+      Consejo: escribe el nombre, elige si es profesor o profesora y presiona “Vista previa”. Luego imprime tu certificado.
+    </p>
+
+    <!-- Sección de contraseña -->
+    <section id="passwordSection" class="mb-8 p-6 rounded-xl bg-white/10 backdrop-blur border border-white/20">
+      <h2 class="text-xl font-semibold mb-4">Acceso Docente</h2>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input type="password" id="passwordInput" placeholder="Ingrese contraseña de docente"
+               class="flex-1 px-4 py-2 rounded-lg bg-white/90 text-slate-900 placeholder-slate-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#37BB7D]" />
+        <button id="btnValidar" class="px-4 py-2 rounded-lg bg-[#56C09B] hover:bg-[#37BB7D] text-[#0A6B4E] font-semibold shadow">
+          Validar Acceso
+        </button>
+      </div>
+      <p id="passwordMessage" class="mt-3 text-sm min-h-[1.5em]"></p>
+    </section>
+
+    <!-- Certificado -->
+    <section id="certContainer" class="frame p-1 shadow-2xl">
+      <div class="rounded-[14px] bg-slate-900/70 overflow-hidden">
+        <!-- Encabezado -->
+        <header class="relative">
+          <div class="h-28 md:h-32" style="background: linear-gradient(90deg,#0A6B4E 0%, #37BB7D 50%, #56C09B 100%); opacity:.9"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="px-6 py-3 rounded-full bg-white/95 text-[#0A6B4E] font-extrabold shadow backdrop-blur">
+              CONALEP III · Culiacán, Sinaloa
+            </div>
+          </div>
+        </header>
+
+        <!-- Cuerpo -->
+        <div class="px-6 md:px-12 py-8 grid grid-cols-1 md:grid-cols-[auto,1fr,auto] gap-6 md:gap-8 items-start">
+          <!-- Espaciador decorativo en lugar de avatar -->
+          <div class="hidden md:block w-0"></div>
+
+          <!-- Texto del certificado -->
+          <div class="space-y-4">
+            <h1 class="title-font text-2xl md:text-3xl font-semibold">Certificado de Participación</h1>
+            <p class="text-white/80 leading-relaxed">
+              Por medio de la presente se certifica que
+            </p>
+
+            <div class="bg-white text-slate-900 rounded-xl p-4 md:p-5 shadow flex flex-col gap-2">
+              <div class="text-center">
+                <span class="block text-xs tracking-wide text-[#0A6B4E] uppercase">Nombre de la persona participante</span>
+                <span id="nombreMostrado" class="block text-2xl md:text-3xl font-extrabold mt-1 text-[#0A6B4E]">Nombre Apellido</span>
+              </div>
+              <div class="h-px" style="background-color:#56C09B"></div>
+              <p class="text-center" style="color:#3a2a2f">
+                Participó en el
+                <strong style="color:#0A6B4E">Taller: Uso de IAs en Educación Media Superior</strong>,
+                desarrollado por la <strong style="color:#0A6B4E">M.C. Adriana Alicia Barrios Rodríguez</strong>,
+                en las instalaciones de <strong style="color:#0A6B4E">CONALEP III</strong> en <strong style="color:#0A6B4E">Culiacán, Sinaloa</strong>,
+                con una duración de <strong style="color:#0A6B4E">4 horas</strong>.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div class="rounded-xl p-4 border" style="background-color: rgba(86,192,155,0.12); border-color: rgba(86,192,155,0.35)">
+                <p class="text-white/80 text-sm">Fecha de emisión</p>
+                <p id="fechaAuto" class="text-white font-semibold text-lg">--</p>
+              </div>
+              <div class="rounded-xl p-4 border" style="background-color: rgba(86,192,155,0.12); border-color: rgba(86,192,155,0.35)">
+                <p class="text-white/80 text-sm">Sede</p>
+                <p class="text-white font-semibold text-lg">CONALEP III, Culiacán</p>
+              </div>
+              <div class="rounded-xl p-4 border" style="background-color: rgba(86,192,155,0.12); border-color: rgba(86,192,155,0.35)">
+                <p class="text-white/80 text-sm">Duración</p>
+                <p class="text-white font-semibold text-lg">4 horas</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sello y firma -->
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-28 h-28 rounded-full stamp shadow-lg grid place-items-center text-white font-extrabold border-4" style="border-color:#56C09B">
+              IA
+            </div>
+            <div class="w-full text-center">
+              <div class="h-10"></div>
+              <div class="pt-2" style="border-top:2px solid #56C09B">
+                <p class="font-medium" style="color:#56C09B">M.C. Adriana Alicia Barrios Rodríguez</p>
+                <p class="text-white/80 text-sm">Ponente del Taller</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pie con validación -->
+        <footer class="px-6 md:px-12 pb-8">
+          <div class="rounded-xl p-4 md:p-5 border" style="background-color: rgba(86,192,155,0.08); border-color: rgba(86,192,155,0.25)">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold" style="background-color:#0A6B4E">✓</span>
+              <p class="text-white/85 text-sm leading-relaxed">
+                Este certificado es válido para acreditar la participación en el taller. Para impresión, usa el botón “Imprimir”.
+              </p>
+            </div>
+          </div>
+          <div id="notaNoOficial" class="mt-4 rounded-xl p-4 border text-center" style="background-color: rgba(255, 0, 0, 0.15); border-color: rgba(255, 0, 0, 0.3);">
+            <p class="text-white/90 text-sm font-medium">
+              ⚠️ <strong>Importante:</strong> Este certificado es únicamente con fines demostrativos. El certificado oficial será otorgado por la institución sede.
+            </p>
+          </div>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Utilidades
+    const $ = (sel) => document.querySelector(sel);
+
+    // Elementos
+    const nombreInput = $('#nombreInput');
+    const nombreMostrado = $('#nombreMostrado');
+    const fechaAuto = $('#fechaAuto');
+    const btnVista = $('#btnVista');
+    const btnImprimir = $('#btnImprimir');
+    const passwordInput = $('#passwordInput');
+    const btnValidar = $('#btnValidar');
+    const passwordMessage = $('#passwordMessage');
+    const passwordSection = $('#passwordSection');
+
+    // Contraseña correcta
+    const CONTRASENA_CORRECTA = "iaedu2025";
+    
+    // Estado de autenticación
+    let accesoValidado = false;
+
+    // Formatea fecha local en español
+    function fechaEnEspanol(fecha = new Date()) {
+      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+      return fecha.toLocaleDateString('es-MX', opciones);
+    }
+
+    // Actualiza fecha al cargar
+    function setFecha() {
+      fechaAuto.textContent = fechaEnEspanol();
+    }
+
+    // Sincroniza nombre mostrado
+    function syncNombre() {
+      const val = (nombreInput.value || '').trim();
+      nombreMostrado.textContent = val.length ? val : 'Nombre Apellido';
+    }
+
+    // Mostrar mensaje de contraseña
+    function mostrarMensaje(mensaje, esError = true) {
+      passwordMessage.textContent = mensaje;
+      passwordMessage.className = `mt-3 text-sm min-h-[1.5em] ${esError ? 'text-red-300' : 'text-green-300'}`;
+    }
+
+    // Validar contraseña
+    function validarPassword() {
+      const password = passwordInput.value.trim();
+      
+      if (password === CONTRASENA_CORRECTA) {
+        accesoValidado = true;
+        mostrarMensaje('Acceso concedido. Puede generar certificados.', false);
+        passwordSection.classList.add('border-green-400');
+        setTimeout(() => {
+          passwordMessage.textContent = '';
+          passwordSection.classList.remove('border-green-400');
+        }, 3000);
+      } else {
+        accesoValidado = false;
+        mostrarMensaje('Contraseña incorrecta. Acceso denegado.');
+        passwordSection.classList.add('border-red-400');
+        setTimeout(() => {
+          passwordSection.classList.remove('border-red-400');
+        }, 1000);
+      }
+    }
+
+    // Inicialización
+    setFecha();
+    syncNombre();
+
+    // Eventos
+    nombreInput.addEventListener('input', syncNombre);
+
+    btnVista.addEventListener('click', () => {
+      // Solo confirma los datos en pantalla; ya se actualiza en vivo
+      // Añadimos un pequeño destello visual
+      const card = document.getElementById('certContainer');
+      card.animate(
+        [{ boxShadow: '0 0 0 rgba(255,255,255,0)' }, { boxShadow: '0 0 0 rgba(255,255,255,0)' }],
+        { duration: 400, easing: 'ease-out' }
+      );
+      // Dar foco al nombre por si falta
+      if (!nombreInput.value.trim()) nombreInput.focus();
+    });
+
+    btnImprimir.addEventListener('click', () => {
+      if (!accesoValidado) {
+        mostrarMensaje('Debe ingresar la contraseña de docente para imprimir certificados.');
+        passwordInput.focus();
+        return;
+      }
+      window.print();
+    });
+
+    btnValidar.addEventListener('click', validarPassword);
+
+    // Validar con Enter en el campo de contraseña
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        validarPassword();
+      }
+    });
+
+    // Inicialmente deshabilitar botón de imprimir
+    btnImprimir.disabled = true;
+  </script>
+</body>
+</html>
