@@ -72,18 +72,18 @@
       <div class="flex flex-wrap items-center gap-2">
         <input id="nombreInput" type="text" placeholder="Escribe el nombre completo..."
                class="px-4 py-2 rounded-lg bg-white text-slate-900 placeholder-slate-500 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#37BB7D] w-64 md:w-80"
-               maxlength="80" />
-        <button id="btnVista" class="px-4 py-2 rounded-lg bg-[#56C09B] hover:bg-[#37BB7D] text-[#0A6B4E] font-semibold shadow">
+               maxlength="80" disabled />
+        <button id="btnVista" class="px-4 py-2 rounded-lg bg-[#56C09B] hover:bg-[#37BB7D] text-[#0A6B4E] font-semibold shadow opacity-50 cursor-not-allowed">
           Vista previa
         </button>
-        <button id="btnImprimir" class="px-4 py-2 rounded-lg bg-[#37BB7D] hover:bg-[#0A6B4E] hover:text-white text-slate-900 font-semibold shadow">
+        <button id="btnImprimir" class="px-4 py-2 rounded-lg bg-[#37BB7D] hover:bg-[#0A6B4E] hover:text-white text-slate-900 font-semibold shadow opacity-50 cursor-not-allowed">
           Imprimir
         </button>
       </div>
     </div>
   </section>
 
-  <!-- Contenedor principal -->
+  <!-- Contenido principal -->
   <main class="max-w-5xl mx-auto px-4 py-10">
     <p id="notaDemo" class="mb-6 text-white/70 text-sm">
       Consejo: escribe el nombre, elige si es profesor o profesora y presiona “Vista previa”. Luego imprime tu certificado.
@@ -103,7 +103,7 @@
     </section>
 
     <!-- Certificado -->
-    <section id="certContainer" class="frame p-1 shadow-2xl">
+    <section id="certContainer" class="frame p-1 shadow-2xl hidden">
       <div class="rounded-[14px] bg-slate-900/70 overflow-hidden">
         <!-- Encabezado -->
         <header class="relative">
@@ -207,6 +207,7 @@
     const btnValidar = $('#btnValidar');
     const passwordMessage = $('#passwordMessage');
     const passwordSection = $('#passwordSection');
+    const certContainer = $('#certContainer');
 
     // Contraseña correcta
     const CONTRASENA_CORRECTA = "iaedu2025";
@@ -244,18 +245,37 @@
       if (password === CONTRASENA_CORRECTA) {
         accesoValidado = true;
         mostrarMensaje('Acceso concedido. Puede generar certificados.', false);
-        passwordSection.classList.add('border-green-400');
+        
+        // Habilitar campos y botones
+        nombreInput.disabled = false;
+        btnVista.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnImprimir.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnVista.disabled = false;
+        btnImprimir.disabled = false;
+        
+        // Mostrar el certificado
+        certContainer.classList.remove('hidden');
+        
+        // Limpiar campo de contraseña
+        passwordInput.value = '';
+        
         setTimeout(() => {
           passwordMessage.textContent = '';
-          passwordSection.classList.remove('border-green-400');
         }, 3000);
       } else {
         accesoValidado = false;
         mostrarMensaje('Contraseña incorrecta. Acceso denegado.');
-        passwordSection.classList.add('border-red-400');
+        
+        // Mantener deshabilitados
+        nombreInput.disabled = true;
+        btnVista.classList.add('opacity-50', 'cursor-not-allowed');
+        btnImprimir.classList.add('opacity-50', 'cursor-not-allowed');
+        btnVista.disabled = true;
+        btnImprimir.disabled = true;
+        
         setTimeout(() => {
-          passwordSection.classList.remove('border-red-400');
-        }, 1000);
+          passwordMessage.textContent = '';
+        }, 3000);
       }
     }
 
@@ -267,6 +287,12 @@
     nombreInput.addEventListener('input', syncNombre);
 
     btnVista.addEventListener('click', () => {
+      if (!accesoValidado) {
+        mostrarMensaje('Debe ingresar la contraseña de docente para acceder a esta función.');
+        passwordInput.focus();
+        return;
+      }
+      
       // Solo confirma los datos en pantalla; ya se actualiza en vivo
       // Añadimos un pequeño destello visual
       const card = document.getElementById('certContainer');
@@ -274,6 +300,7 @@
         [{ boxShadow: '0 0 0 rgba(255,255,255,0)' }, { boxShadow: '0 0 0 rgba(255,255,255,0)' }],
         { duration: 400, easing: 'ease-out' }
       );
+      
       // Dar foco al nombre por si falta
       if (!nombreInput.value.trim()) nombreInput.focus();
     });
@@ -296,8 +323,11 @@
       }
     });
 
-    // Inicialmente deshabilitar botón de imprimir
+    // Inicialmente deshabilitar todo
+    nombreInput.disabled = true;
+    btnVista.disabled = true;
     btnImprimir.disabled = true;
+    certContainer.classList.add('hidden');
   </script>
 </body>
 </html>
