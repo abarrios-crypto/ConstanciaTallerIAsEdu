@@ -11,13 +11,18 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/build/qrcode.min.js"></script>
   <style>
     @media print {
-      #controlBar, #notaDemo, #notaNoOficial, #passwordSection { display: none !important; }
+      #controlBar, #notaDemo, #passwordSection { display: none !important; }
       body { background: white !important; }
       #certContainer { box-shadow: none !important; }
       /* Configuración para impresión horizontal en carta */
       @page {
         size: letter landscape;
         margin: 2cm;
+      }
+      /* Ajuste del tamaño del certificado para que quepa */
+      #certContainer {
+        max-width: 95%;
+        margin: 0 auto;
       }
     }
 
